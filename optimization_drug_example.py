@@ -125,6 +125,11 @@ opt_dose_escitalopram_nm, opt_effect_escitalopram_nm = newtons_method(escitalopr
 print(f"Newton's Method - Optimal Escitalopram Dose: {opt_dose_escitalopram_nm:.2f} mg")
 print(f"Newton's Method - Optimal Escitalopram Effect: {opt_effect_escitalopram_nm*100:.2f}%")
 
+#ideal dose
+opt_ideal_dose_nm, opt_effect_ideal_dose_nm = newtons_method(ideal_dose, x0 = 1.0)
+print(f"Newton's Method - Optimal Ideal Dose: {opt_effect_ideal_dose_nm: .2f} mg")
+print(f"Newton's Method - Optimal Ideal Dose Effect: {opt_effect_ideal_dose_nm*100: .2f}%")
+
 #testing multiple lambda values to determine optimum values
 
 lambda_values = np.linspace(0.1, 1.0, 10)  # try 10 λ values from 0.1 to 1.0, (ChatGPT, 2026)
