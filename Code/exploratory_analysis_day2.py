@@ -36,3 +36,5 @@ plt.title("Exponential Growth Fit of Day vs Active Reported Daily Cases")
 plt.xlabel("Day")
 plt.ylabel("Active Reported Daily Cases")
 plt.show()
+
+# The estimated R0 value is 1.24.
