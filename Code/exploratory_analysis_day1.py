@@ -16,5 +16,5 @@ plt.ylabel("Active Reported Daily Cases")
 plt.show()
 
 # 1. The first thing I notice about the graphs is that the number of active reported daily cases increases exponentially after staying flat for a decent bit in the first few days. The suggests that the virus is spreading slowly at first and then has a very exponential increase in new cases, as opposed to linear growth.
-# 2. Some ways we could measure how quickly the disease is spreading is by calculating the growth rate (the percentage of increase in new cases each day), the amount of time it takes cases to double, the slope of the curve at its steepest, and average number of people one infected person transmits the virus to R₀)
-# 3. Some helpful information for determining the shape of the outbreak curve would be R₀, the incubation period, the infectious period, and how the population is repsonding to the outbreak or any percautions they might be taking.
+# 2. Some ways we could measure how quickly the disease is spreading is by calculating the growth rate (the percentage of increase in new cases each day), the amount of time it takes cases to double, the slope of the curve at its steepest, and average number of people one infected person transmits the virus to R₀).
+# 3. Some helpful information for determining the shape of the outbreak curve would be R₀, the incubation period, the infectious period, how the population is repsonding to the outbreak or any percautions they might be taking, and the recovery rate of the disease.
