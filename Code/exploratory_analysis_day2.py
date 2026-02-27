@@ -35,3 +35,11 @@ plt.ylabel('Active Infections')
 plt.title(f'Early Outbreak Fit (R0 ≈ {R0:.2f})')
 plt.legend()
 plt.show()
+ 
+
+# Questions:
+#1 similar R0:
+# influenza - Seasonal flu is a respiratory virus that spreads through droplets when people cough or sneeze, and it causes yearly outbreaks with symptoms like fever, cough, and body aches.
+# H1N1 - H1N1 was a pandemic flu strain that spread globally in 2009 and primarily affected younger populations.
+
+#2 I think our R0 is pretty accurate. R^2 is .76 so there is potential more differences either from the data or just from random chance.
