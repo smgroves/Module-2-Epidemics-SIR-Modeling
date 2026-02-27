@@ -26,6 +26,12 @@ fit_curve = exponential_growth(data['day'],r_fit)
 # Add the fit as a line on top of your scatterplot.
 plt.scatter(data['day'], data['active reported daily cases'])
 plt.plot(data['day'], fit_curve, color = 'red', label = 'Exponential Fit')
+plt.text(
+    0.05, 0.95,
+    f"$R_0$ = {R0_estimated:.2f}",
+    transform=plt.gca().transAxes,
+    fontsize=12,
+    verticalalignment='top')
 plt.title("Exponential Growth Fit of Day vs Active Reported Daily Cases")
 plt.xlabel("Day")
 plt.ylabel("Active Reported Daily Cases")
