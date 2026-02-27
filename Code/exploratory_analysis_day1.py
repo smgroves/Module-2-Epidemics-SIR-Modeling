@@ -21,4 +21,11 @@ plt.ylabel('Active Infections')
 plt.title('Mystery Virus: Active Infections Over Time')
 
 plt.show()
+
+#  QUESTIONS:
+# The initial infections start out really slow, but after about three weeks the growth becomes exponential and the curve just takes off.
+
+# We can measure the speed by looking at the growth rate and R0, which shows that each person is infecting more than one other person on average.
+
+# To predict the full curve, it would be helpful to know the infectious period and how many people are asymptomatic or already immune.
 # %%
