@@ -19,14 +19,13 @@ r = slope
 D = 2
 R0 = 1 + r * D
 
-# 4. Output results BEFORE plotting 
-# This helps identify if the math is the problem
+
 print(f"--- Results ---")
 print(f"Growth rate (r): {r:.4f}")
 print(f"R-squared: {r_value**2:.4f}")
 print(f"Estimated R0: {R0:.4f}")
 
-# 5. Plotting
+# 4. Plotting
 plt.figure(figsize=(8, 5))
 plt.scatter(early_data['day'], early_data['active'], label='Data')
 fit_I = np.exp(intercept + r * early_data['day'])
