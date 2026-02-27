@@ -1,0 +1,11 @@
+Task 1: DATA Release #1 Data
+  Plot of Day vs Active Infections
+
+Initial infections:
+The initial infections grow very slowly, with the curve nearly flat at the beginning. This indicates that only a small number of people are infected early on, making the outbreak appear minor at first.
+
+How quickly it’s spreading:
+The speed of spread can be measured by how much the number of infections increases each day, such as the slope of the curve or the time it takes for cases to double. A steeper slope means the virus is spreading faster.
+
+Information needed about the virus:
+Helpful information includes how contagious the virus is, how long the incubation and infectious periods are, and how people behave in response to the outbreak. These factors strongly influence how quickly the curve rises and its overall shape.

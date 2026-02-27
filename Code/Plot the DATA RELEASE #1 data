@@ -1,0 +1,47 @@
+#import necessary libraries
+import pandas as pd
+import matplotlib.pyplot as plt
+from pathlib import Path
+
+# Read the CSV file
+HERE = Path(__file__).resolve().parent  # folder where this script lives
+csv_path = HERE / "mystery_virus_daily_active_counts_RELEASE#1.csv"
+print("Using CSV at:", csv_path.resolve())
+# Check if file exists
+if not csv_path.exists():
+    raise FileNotFoundError(
+        f"Could not find CSV at: {csv_path.resolve()}\n"
+        "Make sure the CSV is in the same folder as this script."
+    )
+df = pd.read_csv(csv_path)
+
+# Create scatterplot
+plt.scatter(df['day'], df['active reported daily cases'])
+
+# Plot labels and titles
+plt.title('Day vs Active Infections')
+plt.xlabel('Day')
+plt.ylabel('Active Infections')
+
+# Display the plot
+plt.show()
+
+#QUESTIONS TO ANSWER:
+# What do you notice about the initial infections?
+    #The initial infections grow very slowly, with the curve nearly flat at the beginning. This indicates that only a small number of people are infected early on, making the outbreak appear minor at first.
+
+# How could we measure how quickly its spreading?
+    #The speed of spread can be measured by how much the number of infections increases each day, such as the slope of the curve or the time it takes for cases to double. A steeper slope means the virus is spreading faster.
+
+# What information about the virus would be helpful in determining the shape of the outbreak curve?
+    #Helpful information includes how contagious the virus is, how long the incubation and infectious periods are, and how people behave in response to the outbreak. These factors strongly influence how quickly the curve rises and its overall shape.
+
+#QUESTIONS TO ANSWER:
+# What do you notice about the initial infections?
+    #The initial infections grow very slowly, with the curve nearly flat at the beginning. This indicates that only a small number of people are infected early on, making the outbreak appear minor at first.
+
+# How could we measure how quickly its spreading?
+    #The speed of spread can be measured by how much the number of infections increases each day, such as the slope of the curve or the time it takes for cases to double. A steeper slope means the virus is spreading faster.
+
+# What information about the virus would be helpful in determining the shape of the outbreak curve?
+    #Helpful information includes how contagious the virus is, how long the incubation and infectious periods are, and how people behave in response to the outbreak. These factors strongly influence how quickly the curve rises and its overall shape.
