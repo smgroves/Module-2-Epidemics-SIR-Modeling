@@ -155,6 +155,3 @@ def predict_peak(best_beta, best_sigma, best_gamma):
     #Implement Euler’s method for SEIR modeling
     #• Plot Euler’s method solutions for I(t) and compare to your data
     #• Guess beta, sigma, and gamma and calculate SSE
-
-
-# %
