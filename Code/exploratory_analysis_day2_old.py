@@ -60,5 +60,9 @@ plt.show()
 =======
 # %%
 rmse = np.sqrt(np.mean((I_fit - I_data) ** 2))
+<<<<<<< Updated upstream:Code/exploratory_analysis_day2_old.py
+print(f"RMSE = {rmse:.4f}")
+>>>>>>> Stashed changes:Data/exploratory_analysis_day2.py
+=======
 print(f"RMSE = {rmse:.4f}")
 >>>>>>> Stashed changes:Data/exploratory_analysis_day2.py

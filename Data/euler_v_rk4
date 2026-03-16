@@ -1,0 +1,138 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# --------------------------
+# Load ALL outbreak CSV files
+# --------------------------
+
+file1 = pd.read_csv("mystery_virus_daily_active_counts_RELEASE#1.csv")
+file2 = pd.read_csv("mystery_virus_daily_active_counts_RELEASE#2.csv")
+file3 = pd.read_csv("mystery_virus_daily_active_counts_RELEASE#3.csv")
+
+# Combine datasets
+data = pd.concat([file1, file2, file3])
+
+# Extract real outbreak data
+actual_cases = data["active reported daily cases"].values
+days_data = data["day"].values
+
+# --------------------------
+# SEIR Parameters
+# --------------------------
+
+beta = 0.27
+sigma = 0.20
+gamma = 0.14
+
+N = 25000
+
+S0 = N - 1
+E0 = 1
+I0 = 1
+R0 = 0
+
+days = len(actual_cases)
+dt = 1
+t = np.arange(0, days, dt)
+
+# --------------------------
+# Euler Method
+# --------------------------
+
+S_e = np.zeros(days)
+E_e = np.zeros(days)
+I_e = np.zeros(days)
+R_e = np.zeros(days)
+
+S_e[0] = S0
+E_e[0] = E0
+I_e[0] = I0
+R_e[0] = R0
+
+for i in range(days-1):
+
+    dS = -beta * S_e[i] * I_e[i] / N
+    dE = beta * S_e[i] * I_e[i] / N - sigma * E_e[i]
+    dI = sigma * E_e[i] - gamma * I_e[i]
+    dR = gamma * I_e[i]
+
+    S_e[i+1] = S_e[i] + dt*dS
+    E_e[i+1] = E_e[i] + dt*dE
+    I_e[i+1] = I_e[i] + dt*dI
+    R_e[i+1] = R_e[i] + dt*dR
+
+# --------------------------
+# RK4 Method
+# --------------------------
+
+S_r = np.zeros(days)
+E_r = np.zeros(days)
+I_r = np.zeros(days)
+R_r = np.zeros(days)
+
+S_r[0] = S0
+E_r[0] = E0
+I_r[0] = I0
+R_r[0] = R0
+
+
+def derivatives(S,E,I,R):
+
+    dS = -beta * S * I / N
+    dE = beta * S * I / N - sigma * E
+    dI = sigma * E - gamma * I
+    dR = gamma * I
+
+    return dS,dE,dI,dR
+
+
+for i in range(days-1):
+
+    k1 = derivatives(S_r[i],E_r[i],I_r[i],R_r[i])
+
+    k2 = derivatives(
+        S_r[i] + dt*k1[0]/2,
+        E_r[i] + dt*k1[1]/2,
+        I_r[i] + dt*k1[2]/2,
+        R_r[i] + dt*k1[3]/2
+    )
+
+    k3 = derivatives(
+        S_r[i] + dt*k2[0]/2,
+        E_r[i] + dt*k2[1]/2,
+        I_r[i] + dt*k2[2]/2,
+        R_r[i] + dt*k2[3]/2
+    )
+
+    k4 = derivatives(
+        S_r[i] + dt*k3[0],
+        E_r[i] + dt*k3[1],
+        I_r[i] + dt*k3[2],
+        R_r[i] + dt*k3[3]
+    )
+
+    S_r[i+1] = S_r[i] + dt*(k1[0] + 2*k2[0] + 2*k3[0] + k4[0])/6
+    E_r[i+1] = E_r[i] + dt*(k1[1] + 2*k2[1] + 2*k3[1] + k4[1])/6
+    I_r[i+1] = I_r[i] + dt*(k1[2] + 2*k2[2] + 2*k3[2] + k4[2])/6
+    R_r[i+1] = R_r[i] + dt*(k1[3] + 2*k2[3] + 2*k3[3] + k4[3])/6
+
+# --------------------------
+# Plot Comparison
+# --------------------------
+
+plt.figure(figsize=(10,6))
+
+plt.plot(t, I_e, label="Euler Model", linestyle="--")
+plt.plot(t, I_r, label="RK4 Model")
+
+plt.scatter(days_data, actual_cases, label="Observed Data")
+
+plt.xlabel("Days")
+plt.ylabel("Active Infections")
+plt.title("SEIR Model Comparison: Euler vs RK4 vs Observed Data")
+
+plt.legend()
+plt.grid()
+
+plt.show()
