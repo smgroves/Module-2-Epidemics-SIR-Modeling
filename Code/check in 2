@@ -1,0 +1,238 @@
+#%%
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.optimize import curve_fit
+from pathlib import Path
+
+
+#-----OVERALL GOAL-------
+#How to predict the peak of the epidemic?
+    #What do we need to be able to predict the future?
+    #Step 1: Figure out how to solve the SEIR model
+    #Step 2: Fit a model to our data by picking good parameters
+    #Step 3: Extrapolate past the data that we have to see when I(t) peaks in the model
+
+# Load the data
+# find the folder where the script is located
+HERE = Path(__file__).parent
+
+# build path to the csv
+csv_path = HERE / "mystery_virus_daily_active_counts_RELEASE#2.csv"
+
+data = pd.read_csv(csv_path, parse_dates=['date'])
+
+#-----------STEP 1---------------
+#Pseudocode for Euler’s Method Approximation of SEIR
+    #INPUTS: beta, sigma, gamma, S0, E0, I0, R0, timepoints, N
+    #• Initialize S, E, I, and R as empty arrays or lists
+    #• Set first item in each list equal to initial values S0, E0, I0, R0
+    ###• For each timepoint in timepoints:
+    #• Calculate the four derivatives at timepoint
+    #• Calculate S, E, I, and R at timepoint + 1 using Euler’s method
+    #• Return S, E, I, and R
+
+cases = data['active reported daily cases'].values
+
+#euler's method to approximate SEIR using function
+# INPUTS: beta, sigma, gamma, S0, E0, I0, R0, timepoints, N
+def eulerapprox_SEIR(beta, sigma, gamma, S0, E0, I0, R0, timepoints, N):
+
+    #Initialize S, E, I, R as empty arrays
+    S = np.zeros(len(timepoints)) #np.zeros creates an array of zeros with the same length as timepoints (days)
+    E = np.zeros(len(timepoints))
+    I = np.zeros(len(timepoints))
+    R = np.zeros(len(timepoints))
+
+    #Set first item in each list equal to initial values  S0, E0, I0, R0
+    S[0] = S0
+    E[0] = E0
+    I[0] = I0
+    R[0] = R0
+
+    #for each timepoint in timepoints:
+    for t in range(len(timepoints) - 1): #len(timepoints) - 1 here because we are calculating the next timepoint values / the next day values, so we stop one day before the end 
+
+    #Calculate four derivatives at timepoint
+        
+        # Change in susceptible population S
+        dS = -beta * ((S[t] * I[t]) / N)
+        
+        # Change in exposed population E
+        dE = (beta * ((S[t] * I[t]) / N)) - (sigma * E[t])
+        
+        # Change in infected population I
+        dI = (sigma * E[t]) - (gamma * I[t])
+        
+        # Change in recovered population R
+        dR = gamma * I[t]
+
+    #Calculate S, E, I, and R at timepoint + 1 using Euler’s method ---> Use Euler's Method to calculate next day's values
+    # euler's method: y(i+1) = y(i) + (dy/dt)*h ---> next value = current value + (derivative * time step) ---> h here is 1 day so we *1
+
+        S[t+1] = S[t] + dS*1 #calculates next day's susceptible population
+        E[t+1] = E[t] + dE*1 #calculates next day's exposed population
+        I[t+1] = I[t] + dI*1 #calculates next day's infected population
+        R[t+1] = R[t] + dR*1 #calculates next day's recovered population
+
+    #Return S, E, I, and R
+    return S, E, I, R
+#----------------------------------------------------
+
+
+#-----------STEP 2---------------
+#fitting the SEIR model by picking good parameters
+
+#Our goal: get S(t), E(t), I(t), and R(t) using Euler’s method
+    #• These solutions will depend on our parameters, beta, sigma, and gamma
+    #• We can choose different values of the parameters to try to match our actual dataset
+    #• In other words, we will combine Euler’s method with optimization of SSE to pick best beta, sigma, and gamma for our dataset
+
+#Grid search optimization pseudocode
+    #INPUTS: timepoints, N, S0, E0, I0, R0, data
+    #• Initialize a range for beta, sigma, and gamma
+    #• Initialize an empty array of SSE
+    #• Make arrays of values given each range for each parameter
+    #• For b in beta
+        #• For s in sigma
+            #• For g in gamma
+                #• Use the Euler method function you developed to calculate S, E, I, and R given those parameters
+                #• Calculate the SSE given the model results and the data and append this to the SSE array
+    #• Determine parameters corresponding to lowest SSE
+    #• Return best_beta, best_sigma, and best_gamma and corresponding SSE
+
+#optimization function
+#INPUTS: timepoints, N, S0, E0, I0, R0, data
+def optimize_SEIR(timepoints, N, S0, E0, I0, R0, data):
+
+    #• Initialize a range for beta, sigma, and gamma
+    gamma_range = np.linspace(0.091,0.142,75) # gamma = recovery rate = 1/symptomatic period, so range of 1/11 to 1/7
+    sigma_range = np.linspace(0.056,0.083,75) #sigma = incubation rate = 1/incubation period, so range of 1/18 to 1/12
+    R0_est = 2.0930
+    beta_range = np.linspace(0.3, 1.0, 75)
+    
+
+    #initialize an empty array of SSE
+    SSE_array = []
+    parameters = [] #this is list of paramters (beta, sigma, gamma) 
+
+    #make arrays of values given each range for each parameter
+    for b in beta_range:
+        for s in sigma_range:
+            for g in gamma_range:
+                #Use euler method function you developed to calculate S, E, I, and R given those parameters
+                S,E,I,R = eulerapprox_SEIR(b, s, g, S0, E0, I0, R0, timepoints, N)
+                #calculate the SSE given the model results and the data and append this to the SSE array
+                cases = data['active reported daily cases'].values
+                SSE = np.sum((I[:len(cases)] - cases)**2)
+                SSE_array.append(SSE)
+                parameters.append((b, s, g)) #this adds the parameters to the list
+    
+    #Determine parameters corresponding to lowest SSE
+    lowest_SSE = min(SSE_array)
+    corres_SSE = SSE_array.index(lowest_SSE) #this finds the index of the minimum SSE in the SSE array
+    best_beta, best_sigma, best_gamma = parameters[corres_SSE] #this finds the best parameters using the index of the minimum SSE
+
+    #return best_beta, best_sigma, best_gamma and correspondsing SSE
+    return best_beta, best_sigma, best_gamma, lowest_SSE
+
+
+
+#-----------------------------------------------------
+
+
+#-----------STEP 3---------------
+#predicting the peak 
+
+#INPUTS: best_beta, best_sigma, best_gamma
+    #• Use the Euler method to run the model out many more days until the data peaks
+    #• How high is the peak? Is that a reasonable value?
+    #• What day will the peak occur?
+
+   
+#-----------STEP 3---------------
+#predicting the peak 
+
+#INPUTS: best_beta, best_sigma, best_gamma
+# • Use Euler's method to run the model many more days
+# • Find when I(t) reaches its maximum
+# • Report peak size and peak date
+
+def predict_peak(best_beta, best_sigma, best_gamma, S0, E0, I0, R0, N):
+    extra_days = len(data) + 200
+    time_extra = np.arange(0, extra_days)
+
+    S, E, I, R = eulerapprox_SEIR(best_beta, best_sigma, best_gamma,
+                                  S0, E0, I0, R0, time_extra, N)
+
+    peak_value = np.max(I)
+    peak_day = np.argmax(I)
+
+    return peak_value, peak_day
+
+
+#Next steps in your code:
+    #Implement Euler’s method for SEIR modeling
+    #• Plot Euler’s method solutions for I(t) and compare to your data
+    #• Guess beta, sigma, and gamma and calculate SSE
+
+# %%
+
+#TESTING THE FUNCTIONS
+
+timepoints = np.arange(len(data))
+#Set initial conditions and parameters for testing
+N = 17900
+I0 = data['active reported daily cases'].iloc[0]
+E0 = 5   # assume 1 exposed person
+R0 = 0
+
+S0 = N - I0 - E0 - R0
+
+best_beta, best_sigma, best_gamma, best_SSE = optimize_SEIR(
+    timepoints, N, S0, E0, I0, R0, data
+)
+
+print("Best beta:", best_beta)
+print("Best sigma:", best_sigma)
+print("Best gamma:", best_gamma)
+print("Lowest SSE:", best_SSE)
+
+
+
+#2e
+S, E, I, R = eulerapprox_SEIR( best_beta, best_sigma, best_gamma, S0, E0, I0, R0, timepoints, N )
+plt.figure() # observed data 
+plt.scatter( data['day'], data['active reported daily cases'], label="Observed Data" ) # SEIR model prediction 
+plt.plot( timepoints, I, color="red", label="SEIR Model Prediction" ) 
+plt.xlabel("Day") 
+plt.ylabel("Active Infections") 
+plt.title("SEIR Model Fit to Data") 
+plt.legend() 
+plt.show()
+
+
+# %%
+peak_value, peak_day = predict_peak(best_beta, best_sigma, best_gamma, S0, E0, I0, R0, N)
+
+print("Predicted peak infections:", peak_value)
+print("Predicted peak day:", peak_day)
+
+
+
+# %%
+#plotting the model to see the predicted progression of the epidemic past the data we have
+extra_days = len(data) + 200
+time_extra = np.arange(0, extra_days)
+S, E, I, R = eulerapprox_SEIR(best_beta, best_sigma, best_gamma,
+                                  S0, E0, I0, R0, time_extra, N)
+plt.figure()
+plt.plot(time_extra, I, color="red", label="SEIR Model Prediction")
+plt.xlabel("Day")
+plt.ylabel("Active Infections")
+plt.title("SEIR Model Prediction of Disease")
+plt.legend()
+
+
+# %%

@@ -1,0 +1,106 @@
+#%%
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.optimize import curve_fit
+from pathlib import Path
+
+
+#-----OVERALL GOAL-------
+#How to predict the peak of the epidemic?
+    #What do we need to be able to predict the future?
+    #Step 1: Figure out how to solve the SEIR model
+    #Step 2: Fit a model to our data by picking good parameters
+    #Step 3: Extrapolate past the data that we have to see when I(t) peaks in the model
+
+# Load the data
+# find the folder where the script is located
+HERE = Path(__file__).parent
+
+# build path to the csv
+csv_path = HERE / "mystery_virus_daily_active_counts_RELEASE#3.csv"
+
+data = pd.read_csv(csv_path, parse_dates=['date'])
+
+timepoints_full = np.arange(len(data))
+
+def eulerapprox_SEIR(beta, sigma, gamma, S0, E0, I0, R0, timepoints, N):
+
+    #Initialize S, E, I, R as empty arrays
+    S = np.zeros(len(timepoints)) #np.zeros creates an array of zeros with the same length as timepoints (days)
+    E = np.zeros(len(timepoints))
+    I = np.zeros(len(timepoints))
+    R = np.zeros(len(timepoints))
+
+    #Set first item in each list equal to initial values  S0, E0, I0, R0
+    S[0] = S0
+    E[0] = E0
+    I[0] = I0
+    R[0] = R0
+
+    #for each timepoint in timepoints:
+    for t in range(len(timepoints) - 1): #len(timepoints) - 1 here because we are calculating the next timepoint values / the next day values, so we stop one day before the end 
+
+    #Calculate four derivatives at timepoint
+        
+        # Change in susceptible population S
+        dS = -beta * ((S[t] * I[t]) / N)
+        
+        # Change in exposed population E
+        dE = (beta * ((S[t] * I[t]) / N)) - (sigma * E[t])
+        
+        # Change in infected population I
+        dI = (sigma * E[t]) - (gamma * I[t])
+        
+        # Change in recovered population R
+        dR = gamma * I[t]
+
+    #Calculate S, E, I, and R at timepoint + 1 using Euler’s method ---> Use Euler's Method to calculate next day's values
+    # euler's method: y(i+1) = y(i) + (dy/dt)*h ---> next value = current value + (derivative * time step) ---> h here is 1 day so we *1
+
+        S[t+1] = S[t] + dS*1 #calculates next day's susceptible population
+        E[t+1] = E[t] + dE*1 #calculates next day's exposed population
+        I[t+1] = I[t] + dI*1 #calculates next day's infected population
+        R[t+1] = R[t] + dR*1 #calculates next day's recovered population
+
+    #Return S, E, I, and R
+    return S, E, I, R
+
+best_beta = 0.8581081081081081
+best_sigma = 0.05782432432432433
+best_gamma =  0.1289054054054054
+N = 17900
+# define initial conditions
+I0 = 1
+E0 = 5
+R0 = 0
+S0 = N - I0 - E0 - R0
+
+S_data, E_data, I_data, R_data = eulerapprox_SEIR(best_beta, best_sigma, best_gamma, S0, E0, I0, R0,
+    timepoints_full,N)
+
+plt.figure()
+
+# full observed data
+plt.scatter(
+    data['day'],
+    data['active reported daily cases'],
+    label="Data Release #3"
+)
+
+# model prediction
+plt.plot(
+    timepoints_full,
+    I_data,
+    color="red",
+    label="SEIR Model Prediction"
+)
+
+plt.xlabel("Day")
+plt.ylabel("Active Infections")
+plt.title("SEIR Model vs Full Dataset")
+plt.legend()
+
+plt.show()
+# %%

@@ -1,0 +1,91 @@
+#What if the vaccines were available earlier?
+#• How does the peak number of infections depend on the timing of a vaccination event?
+
+#%%
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.optimize import curve_fit
+from pathlib import Path
+
+
+HERE = Path(__file__).parent
+
+# build path to the csv
+csv_path = HERE / "mystery_virus_daily_active_counts_RELEASE#3.csv"
+
+data = pd.read_csv(csv_path, parse_dates=['date'])
+ 
+def eulerapprox_SEIR_vaccine(beta, sigma, gamma, S0, E0, I0, R0, timepoints, N, vaccine_day, vaccinated):
+
+    S = np.zeros(len(timepoints))
+    E = np.zeros(len(timepoints))
+    I = np.zeros(len(timepoints))
+    R = np.zeros(len(timepoints))
+
+    S[0] = S0
+    E[0] = E0
+    I[0] = I0
+    R[0] = R0
+
+    for t in range(len(timepoints)-1):
+
+        # vaccination event
+        if t == vaccine_day:
+            S[t] = S[t] - vaccinated
+            R[t] = R[t] + vaccinated
+
+        dS = -beta * S[t] * I[t] / N
+        dE = beta * S[t] * I[t] / N - sigma * E[t]
+        dI = sigma * E[t] - gamma * I[t]
+        dR = gamma * I[t]
+
+        S[t+1] = S[t] + dS
+        E[t+1] = E[t] + dE
+        I[t+1] = I[t] + dI
+        R[t+1] = R[t] + dR
+
+    return S,E,I,R
+
+
+#TESTING
+
+
+best_beta = 0.8581081081081081
+best_sigma = 0.05782432432432433
+best_gamma =  0.1289054054054054
+
+days = np.arange(0, 120)
+#VT Parameters
+N_VT = 31000          # VT student population
+E0_VT= E0_UVA = 5           # example: replace with your UVA E0 from earlier
+I0 = data['active reported daily cases'].iloc[0]
+R0 = 0
+S0 = N_VT - I0 - E0_VT - R0
+
+
+vaccine_days = [10, 30, 50, 70]
+vaccinated = 8000
+days = 120
+timepoints = np.arange(days)
+
+plt.figure()
+
+for v_day in vaccine_days:
+
+    S,E,I,R = eulerapprox_SEIR_vaccine(
+        best_beta, best_sigma, best_gamma,
+        S0, E0_VT, I0, R0,
+        timepoints, N_VT,
+        v_day, vaccinated
+    )
+
+    plt.plot(timepoints, I, label=f"Vaccine Day {v_day}")
+plt.xlabel("Day")
+plt.ylabel("Active Infections I(t)")
+plt.title("Effect of Vaccination Timing on Epidemic Curve")
+plt.legend()
+
+plt.show()
+# %%

@@ -1,0 +1,165 @@
+#%%
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.optimize import curve_fit
+from pathlib import Path
+
+
+HERE = Path(__file__).parent
+
+# build path to the csv
+csv_path = HERE / "mystery_virus_daily_active_counts_RELEASE#3.csv"
+
+data = pd.read_csv(csv_path, parse_dates=['date'])
+ 
+
+
+#Each intervention will change some parameter (or move a population to anew compartment) at day 70
+#• You will compare these changes to the baseline prediction for VT
+#• As you model them from days 70-120, compare the following to no
+#intervention:
+##• Peak infections with intervention
+##• Total cases (over days 70-120) prevented with intervention
+
+
+
+#modeling the interventions
+def model_SEIR(beta, sigma, gamma, S0, E0, I0, R0, days, N, intervention=None):
+
+    #Initialize S, E, I, R as empty arrays
+    S = np.zeros(len(days)) #np.zeros creates an array of zeros with the same length as timepoints (days)
+    E = np.zeros(len(days))
+    I = np.zeros(len(days))
+    R = np.zeros(len(days))
+
+    #Set first item in each list equal to initial values  S0, E0, I0, R0
+    S[0] = S0
+    E[0] = E0
+    I[0] = I0
+    R[0] = R0
+
+    #masking mandate
+    #Immediate masking mandate implemented from day 70 on Reduces transmission by 40%
+    #reducing transmission by 40% means beta is reduced by 40% as beta is transmission rate
+    #new beta will be 60% of UVA beta 
+    beta_masking = best_beta * 0.6
+    masking_day = 70
+
+    #vaccine campaign
+    #accine campaign:single event on day 70 • Vaccinate 2000 students on day 70 with 90% efficacy
+    vaccine_day = 70
+    vaccine_efficacy = 0.9
+    vaccinated_students = 2000
+    #vaccinated students will move from S to R because they are effectively immune (from susceptible to recovered) 
+    # we will reduce S by 2000 and increase R by 2000 * vaccine efficacy
+    #S0_vaccine = S0 - vaccinated_students
+    #R0_vaccine = R0 + (vaccinated_students * vaccine_efficacy)
+
+    #close school for 2 weeks
+    #During closure, only 20% of normal contacts • After closure, contact rate returns to normal
+    closing_days = range(70, 84) #closing for 2 weeks from day 70 to day 83
+    #20% of contacts means beta is 20% of UVA beta
+    beta_closing = best_beta * 0.2
+
+    #for each timepoint in timepoints:
+    for t in range(len(days) - 1): #len(timepoints) - 1 here because we are calculating the next timepoint values / the next day values, so we stop one day before the end 
+
+        current_beta = beta # start with baseline beta
+        if intervention == 'masking' and t >= masking_day:
+            current_beta = beta_masking
+        if intervention == 'vaccine' and t == vaccine_day:
+            vaccinated_effective = vaccinated_students * vaccine_efficacy
+            S[t] = S[t] - vaccinated_effective
+            R[t] = R[t] + vaccinated_effective
+        if intervention == 'closure' and t in closing_days:
+            current_beta = beta_closing
+        
+    #Calculate four derivatives at timepoint
+        
+        # Change in susceptible population S
+        dS = -current_beta * ((S[t] * I[t]) / N)
+        
+        # Change in exposed population E
+        dE = (current_beta * ((S[t] * I[t]) / N)) - (sigma * E[t])
+        
+        # Change in infected population I
+        dI = (sigma * E[t]) - (gamma * I[t])
+        
+        # Change in recovered population R
+        dR = gamma * I[t]
+
+    #Calculate S, E, I, and R at timepoint + 1 using Euler’s method ---> Use Euler's Method to calculate next day's values
+    # euler's method: y(i+1) = y(i) + (dy/dt)*h ---> next value = current value + (derivative * time step) ---> h here is 1 day so we *1
+
+        S[t+1] = S[t] + dS*1 #calculates next day's susceptible population
+        E[t+1] = E[t] + dE*1 #calculates next day's exposed population
+        I[t+1] = I[t] + dI*1 #calculates next day's infected population
+        R[t+1] = R[t] + dR*1 #calculates next day's recovered population
+
+    #Return S, E, I, and R
+    return S, E, I, R
+
+##%
+#TESTING
+days = np.arange(0, 120)
+#VT Parameters
+N_VT = 31000          # VT student population
+E0_VT= E0_UVA = 5           # example: replace with your UVA E0 from earlier
+I0 = data['active reported daily cases'].iloc[0]
+R0 = 0
+S0 = N_VT - I0 - E0_VT - R0
+
+best_beta = 0.8581081081081081
+best_sigma = 0.05782432432432433
+best_gamma =  0.1289054054054054
+
+S_masking, E_masking, I_masking, R_masking = model_SEIR(best_beta, best_sigma, best_gamma, S0, E0_VT, I0, R0,
+    days,N_VT, intervention='masking')
+S_vaccine, E_vaccine, I_vaccine, R_vaccine = model_SEIR(best_beta, best_sigma, best_gamma, S0, E0_VT, I0, R0,
+    days,N_VT, intervention='vaccine')
+S_closure, E_closure, I_closure, R_closure = model_SEIR(best_beta, best_sigma, best_gamma, S0, E0_VT, I0, R0,
+    days,N_VT, intervention='closure')
+
+
+print (f"Peak infections with masking intervention: {max(I_masking)}")
+print (f"Peak infections with vaccine intervention: {max(I_vaccine)}")
+print (f"Peak infections with closure intervention: {max(I_closure)}")
+
+#baseline 
+S_baseline, E_baseline, I_baseline, R_baseline = model_SEIR(best_beta, best_sigma, best_gamma, S0, E0_VT, I0, R0,
+    days,N_VT)
+print (f"Peak infections with no intervention: {max(I_baseline)}")
+
+#finding cases prevented
+cases_prevented_masking = (R_baseline[-1] + I_baseline[-1]) - (R_baseline[69] + I_baseline[69]) \
+                          - ((R_masking[-1] + I_masking[-1]) - (R_masking[69] + I_masking[69]))
+
+cases_prevented_vaccine = (R_baseline[-1] + I_baseline[-1]) - (R_baseline[69] + I_baseline[69]) \
+                          - ((R_vaccine[-1] + I_vaccine[-1]) - (R_vaccine[69] + I_vaccine[69]))
+cases_prevented_closure = (R_baseline[-1] + I_baseline[-1]) - (R_baseline[69] + I_baseline[69]) \
+                          - ((R_closure[-1] + I_closure[-1]) - (R_closure[69] + I_closure[69]))
+
+print (f"Total cases prevented with masking intervention: {cases_prevented_masking}")
+print (f"Total cases prevented with vaccine intervention: {cases_prevented_vaccine}")
+print (f"Total cases prevented with closure intervention: {cases_prevented_closure}")
+
+
+#to model interventions from day 70 to 120
+cases_prevented_masking = (R_baseline[-1] + I_baseline[-1]) - (R_baseline[69] + I_baseline[69]) \
+
+#graphing the results
+plt.figure(figsize=(12, 8))
+plt.plot(days, I_baseline, label='Baseline')
+plt.plot(days, I_masking, label='Masking Intervention')
+plt.plot(days, I_vaccine, label='Vaccine Intervention')
+plt.plot(days, I_closure, label='Closure Intervention')
+plt.xlabel('Days')
+plt.ylabel('Number of Infected Individuals')
+plt.title('SEIR Model: Interventions vs Baseline')
+plt.legend()
+plt.grid()
+plt.show()
+
+# %%
