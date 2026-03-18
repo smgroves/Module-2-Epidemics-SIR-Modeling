@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -105,3 +106,52 @@ print("Estimated E0:", e0_opt)
 print(f"Minimum SSE: {min_sse:.2f}")
 print(f"Predicted Peak Day: Day {peak_day}")
 print(f"Predicted Peak Active Cases: {int(peak_cases)} cases")
+=======
+import numpy as np
+import pandas as pd
+from scipy.integrate import solve_ivp
+
+# Load data
+data = pd.read_csv("mystery_virus_daily_active_counts_RELEASE#3.csv")
+
+t_data = data["day"].values
+I_data = data["active reported daily cases"].values
+
+# Parameters
+N = 17900
+beta = 0.69
+gamma = 0.13
+
+# Initial conditions
+I0 = I_data[0]
+S0 = N - I0
+R0 = 0
+
+y0 = [S0, I0, R0]
+
+# SIR model
+def sir_model(t, y):
+    S, I, R = y
+
+    dS = -beta * S * I / N
+    dI = beta * S * I / N - gamma * I
+    dR = gamma * I
+
+    return [dS, dI, dR]
+
+# Solve the system
+sol = solve_ivp(
+    sir_model,
+    [t_data[0], t_data[-1]],
+    y0,
+    t_eval=t_data
+)
+
+# Extract model infected values
+I_model = sol.y[1]
+
+# Compute SSE
+SSE = np.sum((I_data - I_model)**2)
+
+print("SSE =", SSE)
+>>>>>>> Stashed changes
