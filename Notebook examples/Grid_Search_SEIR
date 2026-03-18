@@ -1,0 +1,40 @@
+import numpy as np
+def grid_search_seir(timepoints, N, S0, E0, I0, R0, data,
+                     beta_range, sigma_range, gamma_range):
+
+    # Store results
+    SSE_results = []
+
+    best_SSE = float("inf")
+    best_beta = None
+    best_sigma = None
+    best_gamma = None
+
+    # Loop over parameter ranges
+    for beta in beta_range:
+        for sigma in sigma_range:
+            for gamma in gamma_range:
+
+                # Run SEIR model
+                S, E, I, R = seir_model(beta, sigma, gamma,
+                                        S0, E0, I0, R0,
+                                        timepoints, N)
+
+                # Convert to numpy for math
+                I = np.array(I)
+                data_arr = np.array(data)
+
+                # Calculate SSE
+                SSE = np.sum((I - data_arr) ** 2)
+
+                # Store result
+                SSE_results.append((beta, sigma, gamma, SSE))
+
+                # Track best parameters
+                if SSE < best_SSE:
+                    best_SSE = SSE
+                    best_beta = beta
+                    best_sigma = sigma
+                    best_gamma = gamma
+
+    return best_beta, best_sigma, best_gamma, best_SSE

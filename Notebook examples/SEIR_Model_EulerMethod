@@ -1,0 +1,35 @@
+def seir_model(beta, sigma, gamma, S0, E0, I0, R0, timepoints, N, dt=1):
+    # Initialize lists
+    S = [S0]
+    E = [E0]
+    I = [I0]
+    R = [R0]
+
+    # Loop over timepoints
+    for t in range(len(timepoints) - 1):
+
+        # Current values
+        S_t = S[-1]
+        E_t = E[-1]
+        I_t = I[-1]
+        R_t = R[-1]
+
+        # Derivatives
+        dS = -beta * S_t * I_t / N
+        dE = beta * S_t * I_t / N - sigma * E_t
+        dI = sigma * E_t - gamma * I_t
+        dR = gamma * I_t
+
+        # Euler update
+        S_next = S_t + dS * dt
+        E_next = E_t + dE * dt
+        I_next = I_t + dI * dt
+        R_next = R_t + dR * dt
+
+        # Append new values
+        S.append(S_next)
+        E.append(E_next)
+        I.append(I_next)
+        R.append(R_next)
+
+    return S, E, I, R

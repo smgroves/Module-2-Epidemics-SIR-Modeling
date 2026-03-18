@@ -1,0 +1,15 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+# Load dataset
+df = pd.read_csv('Data/mystery_virus_daily_active_counts_RELEASE#3.csv', parse_dates=['date'], header=0, index_col=None)
+
+# Plotting
+plt.figure(figsize=(10, 6))
+plt.plot(df['day'], df['active reported daily cases'], color='blue', marker='o', linestyle='-', markersize=4, label='Active Reported Cases')
+
+plt.xlabel('Day')
+plt.ylabel('Active Reported Daily Cases')
+plt.title('Mystery Virus Daily Active Counts (Release #3)')
+plt.grid(True, linestyle='--', alpha=0.7)
+plt.legend()
+plt.show()
