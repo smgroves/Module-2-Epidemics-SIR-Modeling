@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # LOAD DATA
-data = pd.read_csv('Data/mystery_virus_daily_active_counts_RELEASE#2.csv', parse_dates=['date'], header=0, index_col=None)
+data = pd.read_csv('Data/mystery_virus_daily_active_counts_RELEASE#3.csv', parse_dates=['date'], header=0, index_col=None)
 
 t_data = data['day'].values
 y_data = data['active reported daily cases'].values

@@ -54,11 +54,12 @@ plt.ylabel("Active Reported Daily Cases")
 plt.legend()
 plt.show()
 
-<<<<<<< Updated upstream:Code/exploratory_analysis_day2_old.py
 # What viruses have a similar R0? Use the viruses.html file to find a virus or 2 with a similar R0 and give a 1-2 sentence background of the diseases.
 # How accurate do you think your R0 estimate is?
-=======
+
+
 # %%
+<<<<<<< Updated upstream
 rmse = np.sqrt(np.mean((I_fit - I_data) ** 2))
 <<<<<<< Updated upstream:Code/exploratory_analysis_day2_old.py
 print(f"RMSE = {rmse:.4f}")
@@ -66,3 +67,5 @@ print(f"RMSE = {rmse:.4f}")
 =======
 print(f"RMSE = {rmse:.4f}")
 >>>>>>> Stashed changes:Data/exploratory_analysis_day2.py
+=======
+>>>>>>> Stashed changes
