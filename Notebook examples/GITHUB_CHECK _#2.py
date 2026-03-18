@@ -1,4 +1,5 @@
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -107,6 +108,8 @@ print(f"Minimum SSE: {min_sse:.2f}")
 print(f"Predicted Peak Day: Day {peak_day}")
 print(f"Predicted Peak Active Cases: {int(peak_cases)} cases")
 =======
+=======
+>>>>>>> Stashed changes
 import numpy as np
 import pandas as pd
 from scipy.integrate import solve_ivp
@@ -153,5 +156,9 @@ I_model = sol.y[1]
 # Compute SSE
 SSE = np.sum((I_data - I_model)**2)
 
+<<<<<<< Updated upstream
+print("SSE =", SSE)
+>>>>>>> Stashed changes
+=======
 print("SSE =", SSE)
 >>>>>>> Stashed changes
